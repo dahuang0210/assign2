@@ -436,6 +436,8 @@ void scanInput() {
       } else if (keyPressedTime<20) {
         keyPressedTime ++;     // increase pressed time
       }
+    }else{
+      keyPressedTime=1;
     }
     break;
   case 2:  
