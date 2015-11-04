@@ -1,4 +1,4 @@
-/* 
+/** 
  Assignment 1
  Author:          Bao Yuchen
  Student Number:  103254021
@@ -16,11 +16,12 @@ PImage view_end1, view_end2;                                // views of ending
 PImage view_start1, view_start2;                            // views of starting
 
 ArrayList<Integer> enemyX, enemyY, enemySpeed;              // list about enemy (position and moving speed)
+ArrayList<Integer> xKeyStack, yKeyStack;                    // sequence of key pressed
 int enemyCount;                                             // the number of enemy
 
 int fightX, fightY;                                         // variables about fight (position of fight)
 
-boolean hitting;                                            // if buff effections is show (healing effection and hitting effection)
+boolean hitting, healing;                                   // if buff effections is show (healing effection and hitting effection)
 int healRange;                                              // range of healing effection
 
 int bg1x= 0, bg2x = 640, bgSpeed = 5;                       // variables about background images (position of each background and moving speed)
@@ -29,18 +30,19 @@ int curHP, level;                                           // variables about p
 int rdtrx, rdtry;                                           // variables about treasure  
 int gameState;                                              // the state of game 0-logo; 1-game; 2-final
 
-int keyPressedTime;                                         // how long did user pressed a key
-int lastKeyVal = 0;                                         // last key value
-/*
+int xKeyPressedTime=1, yKeyPressedTime=1;                   // how long did user pressed a key
+/**
  * to initialize system
  */
 void setup () {
   size(640, 480) ;  
+  xKeyStack = new ArrayList();
+  yKeyStack = new ArrayList();
   loadResources();
   gameState = 0;
 }
 
-/*
+/**
  * to load pictures
  */
 void loadResources() {
@@ -59,7 +61,7 @@ void loadResources() {
   enemySpeed = new ArrayList();
 }
 
-/*
+/**
  * add a new enemy into screen (max 5)
  */
 void addEnemy() {
@@ -72,7 +74,7 @@ void addEnemy() {
   }
 }
 
-/*
+/**
  * to start game or restart
  */
 void startGame() {
@@ -91,16 +93,16 @@ void startGame() {
   healRange = 50;
 }
 
-/* 
- * to calculate if fighter is hit the target
+/**
+ * to calculate if fighter is hit the t@paramet
  *
- * arg int targetX        the location x of target
- * arg int targetY        the location y of target
- * arg int targetWidth    the width of target
- * arg int targetHeight   the height of target
- * arg errorX             set fault tolerant of location x 
- * arg errorY             set fault tolerant of location y
- * return boolean         if fighter is hit target
+ * @param int t@parametX        the location x of t@paramet
+ * @param int t@parametY        the location y of t@paramet
+ * @param int t@parametWidth    the width of t@paramet
+ * @param int t@parametHeight   the height of t@paramet
+ * @param errorX             set fault tolerant of location x 
+ * @param errorY             set fault tolerant of location y
+ * @return boolean         if fighter is hit t@paramet
  */
 boolean isFighterHitTarget(int targetX, int targetY, int targetWidth, int targetHeight, int errorX, int errorY) {
   int xOffset = FIGHTER_WIDTH / 2 - errorX, yOffset = FIGHTER_HEIGHT/2 - errorY;
@@ -116,12 +118,12 @@ boolean isFighterHitTarget(int targetX, int targetY, int targetWidth, int target
   return false;
 }
 
-/*
+/**
  * to calculate if fighter is hit on enemy
  *
- * arg boolean isCalculateX   set if consider location x while calculate hit algorithm
- * arg int index              to select whitch enemy will be calculated        
- * return boolean             if fighter is hit on enemy
+ * @param boolean isCalculateX   set if consider location x while calculate hit algorithm
+ * @param int index              to select whitch enemy will be calculated        
+ * @return boolean             if fighter is hit on enemy
  */
 boolean isHitEnemy(boolean isCalculateX, int index) {
   boolean ret = false;
@@ -149,20 +151,20 @@ boolean isHitEnemy(boolean isCalculateX, int index) {
   }
 }
 
-/*
+/**
  * to calculate if fighter is hit on treasure
  *
- * return boolean if fighter is hit on treasure
+ * @return boolean if fighter is hit on treasure
  */
 boolean isHitTreasure() {
   return isFighterHitTarget(rdtrx, rdtry, TREASUEE_WIDTH, TREASUEE_HEIGHT, 20, 20);
 }
 
-/*
+/**
  * to caltulate the new location x of background image
  *
- * arg int curX   input cuurrent location x of background image
- * return int     new location x of backgroud image
+ * @param int curX   input cuurrent location x of background image
+ * @return int     new location x of backgroud image
  */
 int moveBG(int curX) {
   // the more level the more quick background moves
@@ -177,15 +179,15 @@ int moveBG(int curX) {
   return curX;
 }
 
-/*
+/**
  * to draw text with stroke effection
  *
- * arg String str           set the string value to print
- * arg color textColor      set the color of text
- * arg color strokeColor    set the color of stroke effection
- * arg int textx            set location x
- * arg int texty            set location y
- * arg int strokeWidth      set the width of stroke effection
+ * @param String str           set the string value to print
+ * @param color textColor      set the color of text
+ * @param color strokeColor    set the color of stroke effection
+ * @param int textx            set location x
+ * @param int texty            set location y
+ * @param int strokeWidth      set the width of stroke effection
  */
 void drawStrokeText(String str, color textColor, color strokeColor, int textx, int texty, int strokeWidth) {
   fill(strokeColor);
@@ -201,11 +203,11 @@ void drawStrokeText(String str, color textColor, color strokeColor, int textx, i
   text(str, textx, texty);
 }
 
-/*
+/**
  * to random an enemy to hit the fighter
  *
- * arg ind index                to select whitch enemy will be reset
- * arg boolean isAvoidFighter   set if the new fighter avoid fighter's position y
+ * @param ind index                to select whitch enemy will be reset
+ * @param boolean isAvoidFighter   set if the new fighter avoid fighter's position y
  */
 void randomEnemy(boolean isAvoidFighter, int index) {
   enemyX.set(index, -100-ENEMY_WIDTH);
@@ -216,7 +218,7 @@ void randomEnemy(boolean isAvoidFighter, int index) {
   } while (isAvoidFighter && isHitEnemy(false, index));
 }
 
-/*
+/**
  * to random an treasure
  */
 void randomTreasure() {
@@ -226,21 +228,41 @@ void randomTreasure() {
   rdtry = floor(random(440)+20);
 }
 
-/*
+/**
  * to draw enemy and then calculate if fighter is hit on enemy, and cost hp
  */
 void drawEnemy() {
   // if need add new enemy;
+  float angle = 0;
   if (floor(level/5 + 1) > enemyCount) {
     addEnemy();
   }
   for (int i = 0; i < enemyCount; i ++) {
+    angle = 0;
     int eSpeed = enemySpeed.get(i);
     int eX = enemyX.get(i), eY = enemyY.get(i);
     int sp = floor(eSpeed * (level/50f+1));
     if (sp > 20) {
       sp = 20;
     }
+    if (eX < -ENEMY_WIDTH) {
+      // wait 100 times, show warning and speed 
+      int tSize = floor(20 * (1 - (- ENEMY_WIDTH - eX) / 100f) + 5);
+      textAlign(LEFT);
+      textSize(16);
+      // draw different color with different speed
+      if (sp > 10) {
+        // 10 - 20 yellow to red
+        drawStrokeText("" + sp, color(255, 255 - floor((sp-10)/10f * 255), 0), #ffffff, 25, eY+ 8 + ENEMY_HEIGHT/2, 1);
+      } else {
+        // 1 - 10 green to yellow
+        drawStrokeText("" + sp, color(floor((sp)/10f * 255), 255, 0), #ffffff, 25, eY+ 8 + ENEMY_HEIGHT/2, 1);
+      }
+      textSize(tSize);
+      drawStrokeText("!", #ff0000, #ffffff, 10, eY+ (tSize >> 1) + ENEMY_HEIGHT/2, 1);
+      eX += 1;
+      enemyX.set(i, eX);
+    } else {
       // normal moves
       eX += sp;
       if (eX<fightX) {
@@ -250,8 +272,10 @@ void drawEnemy() {
         }
         eY += yMove;
         enemyY.set(i, eY);
+        angle = atan(float(yMove)/sp);
       }
       enemyX.set(i, eX);
+    }
     if (eX>= 640) {
       // if enemy move out then make a new one
       randomEnemy(true, i);
@@ -272,11 +296,16 @@ void drawEnemy() {
       fill(#ff0000);
       rect(0, 0, 640, 480);
     }
-    image(view_enemyImg, eX, eY);
+    pushMatrix();
+    int half_height = ENEMY_HEIGHT>>1;
+    int half_width = ENEMY_WIDTH>>1;
+    translate(eX+half_width, eY + half_height);
+    rotate(angle);
+    image(view_enemyImg, -half_width, -half_height);
+    popMatrix();
   }
 }
-
-/*
+/**
  * to draw treasure and then calculate if fighter is hit on treasure, and add hp, level
  */
 void drawTreasure() {
@@ -293,10 +322,10 @@ void drawTreasure() {
   image(view_treasureImg, rdtrx, rdtry);
 }
 
-/*
+/**
  * to draw hp image
  *
- * arg int percent input the percent of hp, the percent will fixed from 0 to 100
+ * @param int percent input the percent of hp, the percent will fixed from 0 to 100
  */
 void drawHP(int percent) {
   if (percent< 0 ) {
@@ -324,7 +353,7 @@ void drawHP(int percent) {
   image(view_hpImg, 20, 20);
 }
 
-/*
+/**
  * to draw auto moving background image
  */
 void drawBackground() {
@@ -334,15 +363,40 @@ void drawBackground() {
   bg2x = moveBG(bg2x);
 }
 
-/*
+/**
  * to draw fighter and hp ellipse
  */
 void drawFighter() {
-  int x = fightX - FIGHTER_WIDTH / 2, y = fightY - FIGHTER_HEIGHT/2 ;
+  int x = fightX - (FIGHTER_WIDTH >> 1), y = fightY - (FIGHTER_HEIGHT >> 1);
+  float hpVal = curHP;
+  color hp = #ffffff;
+  if (curHP>66) {
+    int val = floor((hpVal - 66f) / 33f * 255f);
+    hp = color(val, 255, val);
+  } else if (curHP>33) {
+    int val = 255 - floor((hpVal - 33f) / 33f * 255f);
+    hp = color(val, 255, 0);
+  } else {
+    int val = floor(hpVal / 33f * 255f);
+    hp = color(255, val, 0);
+  }
+  stroke(hp);
+  fill(hp);
+  ellipse(fightX, fightY, 45 + floor(hpVal/4), 50);
+  if (healing) {
+    healRange +=10;
+    ellipse(fightX, fightY, healRange, healRange);
+    if (healRange >= 90) {
+      healing = false;
+    }
+  } else if (healRange > 30) {
+    healRange -= 5;
+    ellipse(fightX, fightY, healRange, healRange);
+  }
   image(view_fighterImg, x, y);
 }
 
-/*
+/**
  * to draw the value of level
  */
 void drawLV() {
@@ -351,10 +405,10 @@ void drawLV() {
   drawStrokeText("Level:"+level, #ffffff, #000000, 620, 20, 1);
 }
 
-/*
+/**
  * to show the final mark when game over
  * 
- * arg boolean isPressed if draw key pressed image
+ * @param boolean isPressed if draw key pressed image
  */
 void drawFinal(boolean isPressed) {
   if (isPressed) {
@@ -367,24 +421,23 @@ void drawFinal(boolean isPressed) {
   drawStrokeText("Final Level:"+level, #ffffff, #ff0000, 320, 220, 2);
 }
 
-/*
+/**
  * if mouse is in area
  * 
- * arg int x         the position x of area
- * arg int y         the position y of area
- * arg int w         the width of area
- * arg int h         the height of area
- * return boolean    return if mouse is in the area
+ * @param int x         the position x of area
+ * @param int y         the position y of area
+ * @param int w         the width of area
+ * @param int h         the height of area
+ * @return boolean      return if mouse is in the area
  */
-
 boolean isMouseHitArea(int x, int y, int r, int b) {
   return (mouseX>x && mouseX<r && mouseY>y && mouseY<b);
 }
 
-/*
+/**
  * to show logo
  * 
- * arg boolean isPressed if draw key pressed image
+ * @param boolean isPressed if draw key pressed image
  */
 void drawLogo(boolean isPressed) {
   if (isPressed) {
@@ -394,54 +447,58 @@ void drawLogo(boolean isPressed) {
   }
 }
 
+/**
+ * handle key press events
+ */
 void scanInput() {
   switch(gameState) {
   case 0:    // key down from logo
-    if (mousePressed && isMouseHitArea(210,380,450,410)) {
-      
+    if (mousePressed && isMouseHitArea(210, 380, 450, 410)) {
       gameState = 11;
     }
     break;
   case 1:                    // key down from normal game
-    if (keyPressed) {
-      if (key == CODED) {
-        switch(keyCode) {
-        case LEFT:
-          fightX-=keyPressedTime>>1;
-          break;
-        case RIGHT:
-          fightX+=keyPressedTime>>1;
-        }
-        switch(keyCode) {
-        case UP:
-          fightY-=keyPressedTime>>1;
-          break;          
-        case DOWN:
-          fightY+=keyPressedTime>>1;
-        }
-        if (fightX<0) {
-          fightX =0;
-        } else if (fightX>640) {
-          fightX =640;
-        }
-        if (fightY<0) {
-          fightY =0;
-        } else if (fightY>480) {
-          fightY =480;
-        }
+    if (xKeyStack.size()>0) {
+      xKeyPressedTime ++;
+      if (xKeyPressedTime>20) {
+        xKeyPressedTime = 20;
       }
-      if (keyCode != lastKeyVal) {
-        keyPressedTime = 1;  // if key changed then reseet pressed time
-        lastKeyVal = keyCode;
-      } else if (keyPressedTime<20) {
-        keyPressedTime ++;     // increase pressed time
+      switch(xKeyStack.get(xKeyStack.size()-1)) {
+      case LEFT:
+        fightX-=xKeyPressedTime>>1;
+        break;
+      case RIGHT:
+        fightX+=xKeyPressedTime>>1;
       }
-    }else{
-      keyPressedTime=1;
+      int offset = FIGHTER_WIDTH >> 1;
+      if (fightX < offset) {
+        fightX = offset;
+      } else if (fightX > (640 - offset)) {
+        fightX = 640 - offset;
+      }
+    }
+    if (yKeyStack.size()>0) {
+      yKeyPressedTime ++; 
+      if (yKeyPressedTime > 20) {
+        yKeyPressedTime = 20;
+      }
+      switch(yKeyStack.get(yKeyStack.size()-1)) {
+      case UP:
+        fightY -= yKeyPressedTime >> 1;
+        break;          
+      case DOWN:
+        fightY += yKeyPressedTime >> 1;
+      }
+      int offset = FIGHTER_HEIGHT >> 1;
+      if (fightY < offset) {
+        fightY = offset;
+      } else if (fightY>(480 - offset)) {
+        fightY = 480 - offset;
+      }
     }
     break;
   case 2:  
-    if (mousePressed && isMouseHitArea(210,310,435,345)) {
+    if (mousePressed && isMouseHitArea(210, 310, 435, 345)) {
       gameState = 22;
     }
   }
@@ -456,14 +513,15 @@ void scanInput() {
     }
   }
 }
-/*
+
+/**
  * to draw components on screen
  */
 void draw() {
   // print current position of the mouse
   // println(String.format("%d,%d",mouseX,mouseY));
   if (gameState == 0) {
-    drawLogo(isMouseHitArea(210,380,450,410));
+    drawLogo(!isMouseHitArea(210, 380, 450, 410));
   } else if (gameState ==11) {
     drawLogo(true);
   } else if (curHP>0) {
@@ -477,7 +535,47 @@ void draw() {
     if (gameState == 1) {
       gameState = 2;        // enter a null state until key up
     }
-    drawFinal(gameState == 22 || isMouseHitArea(210,310,435,345));
+    drawFinal(gameState == 22 || !isMouseHitArea(210, 310, 435, 345));
   }
   scanInput();
+}
+
+/**
+ * when key released
+ */
+void keyReleased() {
+  if (keyCode == LEFT || keyCode == RIGHT) {
+    xKeyPressedTime = 1;
+    for (int i=0; i<xKeyStack.size(); i++) {
+      if (xKeyStack.get(i)==keyCode) {
+        xKeyStack.remove(i);
+        break;
+      }
+    }
+  }
+  if (keyCode == UP||keyCode == DOWN) {
+    yKeyPressedTime = 1;
+    for (int i=0; i<yKeyStack.size(); i++) {
+      if (yKeyStack.get(i)==keyCode) {
+        yKeyStack.remove(i);
+        break;
+      }
+    }
+  }
+}
+
+/**
+ * when key pressed
+ */
+void keyPressed() {
+  if (keyCode == LEFT || keyCode == RIGHT) {
+    if (xKeyStack.size()==0 || xKeyStack.get(xKeyStack.size()-1)-keyCode != 0) {
+      xKeyStack.add(keyCode);
+    }
+  }
+  if (keyCode == UP||keyCode == DOWN) {
+    if (yKeyStack.size()==0 || yKeyStack.get(yKeyStack.size()-1)-keyCode != 0) {
+      yKeyStack.add(keyCode);
+    }
+  }
 }
