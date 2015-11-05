@@ -1,5 +1,5 @@
 /** 
- Assignment 1
+ Assignment 2
  Author:          Bao Yuchen
  Student Number:  103254021
  Update:          2015/10/21
